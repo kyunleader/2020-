@@ -100,4 +100,62 @@ for i in keyword_list:
     globals()['data2020' + i] = data2020[data2020[i] == 1].reset_index(drop=True)
     globals()['data2020' + i]['score'] = scoring(globals()['data2020' + i]['words'], i)
 
+# 나눠진 데이터 별로 토픽모델링 실시
+import gensim
+import gensim.corpora as corpora
+from gensim.models import CoherenceModel
+
+def topic(word):
+    texts = word
+    id2word = corpora.Dictionary(texts)
+    corpus = [id2word.doc2bow(text) for text in texts]
+
+    def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=3):
+        coherence_values = []
+        model_list = []
+        for num_topics in tqdm(range(start, limit, step)):
+
+            model = gensim.models.ldamodel.LdaModel(corpus=corpus,
+                                                    id2word=id2word,
+                                                    num_topics=num_topics,
+                                                    random_state=100,
+                                                    update_every=1,
+                                                    chunksize=100,
+                                                    passes=10,
+                                                    alpha='auto',
+                                                    per_word_topics=True)
+            model_list.append(model)
+            coherencemodel = CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
+            coherence_values.append(coherencemodel.get_coherence())
+        return model_list, coherence_values
+    model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=texts, start=2,
+                                                            limit=20, step=1)
+
+    # Show graph
+    limit = 20; start = 2; step = 1;
+    x = range(start, limit, step)
+    plt.plot(x, coherence_values)
+    plt.xlabel("Num Topics")
+    plt.ylabel("Coherence score")
+    plt.legend(("coherence_values"), loc='best')
+    plt.show()
+    print(coherence_values.index(max(coherence_values)) + 2,'개의 주제가 이상적')
+    #print(word)
+    #주제 dataframe화 하기
+    coherence_values.index(max(coherence_values))
+    optimal_model = model_list[coherence_values.index(max(coherence_values))]
+    topic_dic = {}
+    for i in range(coherence_values.index(max(coherence_values)) + 2):
+        words2 = optimal_model.show_topic(i, topn=20)
+        topic_dic['topic ' + '{:02d}'.format(i + 1)] = [i[0] for i in words2]
+    da = pd.DataFrame(topic_dic)
+    return da
+
+a = topic(data2019근로자['words'])
+
+# 나뉘어진 데이터 프레임 별로 토픽모델링
+for i in keyword_list:
+    globals()['topic2020' + i] = topic(globals()['data2020' + i]['words'])
+
+# 이후 토픽모델링 결과를 살펴보고 고용 트렌드 변화 예측
 
