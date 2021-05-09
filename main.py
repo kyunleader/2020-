@@ -69,10 +69,17 @@ data2019['청년'].value_counts()
 data2020['청년'].value_counts()
 
 # 기사 단위로 word2vec 분석하기
-embedding_model = Word2Vec(pd.concat([data2020['words'], data2019['words']]), vector_size=100, window=5, min_count=30,
-                           workers=4, epochs=50)
+from gensim.models import KeyedVectors
+try:
+    embedding_model = KeyedVectors.load_word2vec_format("new_w2v")  # 모델 로드
+except:
+    embedding_model = Word2Vec(pd.concat([data2020['words'], data2019['words']]), vector_size=100, window=5,
+                               min_count=30,
+                               workers=4, epochs=50)
+    embedding_model.wv.save_word2vec_format('new_w2v')  # 모델 저장
 
 embedding_model.wv.most_similar('유통', topn=10)
+
 
 
 # 기사들이 해당 키워드와 얼마나 관련이 있는지 점수를 매기는 함수 word2vec 유사도 점수를 활용
