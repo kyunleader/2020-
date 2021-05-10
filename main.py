@@ -78,7 +78,7 @@ except:
                                workers=4, epochs=50)
     embedding_model.wv.save_word2vec_format('new_w2v')  # 모델 저장
 
-embedding_model.wv.most_similar('유통', topn=10)
+embedding_model.most_similar('유통', topn=10)
 
 
 
@@ -91,7 +91,7 @@ def scoring(word, keyword):
         for k in word[i]:
             try:
                 # 비교하여 similarity 구하기
-                dist_dist.append(embedding_model.wv.similarity(keyword, k))
+                dist_dist.append(embedding_model.similarity(keyword, k))
             except:
                 dist_dist.append(0)
             dist.append(np.array(dist_dist))
