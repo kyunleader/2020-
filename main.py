@@ -107,6 +107,29 @@ for i in keyword_list:
     globals()['data2020' + i] = data2020[data2020[i] == 1].reset_index(drop=True)
     globals()['data2020' + i]['score'] = scoring(globals()['data2020' + i]['words'], i)
 
+
+# 이상치 제거
+def cut_outlier(a):
+    q1 = np.percentile(a['score'], 25)
+    q3 = np.percentile(a['score'],75)
+    iqr = q3-q1
+    outlier = q1 -  1.5 * iqr
+    print(outlier, ' 값 이하 제거 필요')
+    j=0
+    for k in a['score']:
+        if k < outlier:
+            j +=1
+    print('이상치 ', j, '개 제거')
+    return_data = a[a['score'] > outlier]
+    return return_data
+
+for i in keyword_list:
+    print(i)
+    globals()['data2019' + i] = cut_outlier(globals()['data2019' + i])
+    globals()['data2020' + i] = cut_outlier(globals()['data2020' + i])
+
+
+
 # 나눠진 데이터 별로 토픽모델링 실시
 import gensim
 import gensim.corpora as corpora
